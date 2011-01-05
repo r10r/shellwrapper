@@ -2,11 +2,22 @@
 # Standard maven2 repository
 repositories.remote << 'http://www.ibiblio.org/maven2'
 
+require 'time'
+
 THIS_VERSION = '0.2'
 
 desc 'shellwrapper'
 define 'shellwrapper' do
   project.group = 'de.entwicklerland'
   project.version = THIS_VERSION
-  package :jar, :id => 'shellwrapper'
+  package :sources
+  package :javadoc
+  package(:jar).with :manifest=>
+  { 
+    'Project' => project.id,
+    'Copyright' => 'Ruben Jenster (C) 2011',
+    'Version' => THIS_VERSION,
+    'Creation' => Time.now.strftime("%a, %d %b %Y %H:%M:%S %z")
+  }
+
 end
