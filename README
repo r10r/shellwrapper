@@ -1,0 +1,37 @@
+= Introduction
+
+ShellWrapper is a simple wrapper for shell command executions.
+
+It should help to minimize the effort when interacting
+with external programs that run in a shell.
+
+A command execution returns a result object that
+wraps the  STDOUT and STDERR output of the executed command.
+
+= Installation
+
+ShellWrapper is a buildr project.
+In order to install shellwrapper to your local maven 
+repository you must have buildr installed [buildr](http://buildr.apache.org)
+and run
+<pre>
+  buildr install
+</pre>
+in the project directory.
+The installed library can then be included in any project that 
+uses artifacts from the local maven repository. For buildr 
+you would add the line:
+<pre>
+  define 'myproject' do
+    ...
+    compile.with 'de.entwicklerland:shellwrapper:jar:0.2'
+    ...
+  end
+</pre>
+
+= HOWTO
+
+ShellWrapper is very easy to use.
+I'm to lazy to add a separate documentation here ;-)
+So please have a look at the tests.
+They are most suitable to learn how to use the shellwrapper.
