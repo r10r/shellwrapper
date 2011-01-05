@@ -76,7 +76,7 @@ public class ShellFactory {
 		 * 
 		 * @see #execute(String, String)
 		 * @param command
-		 * @return
+		 * @return a {@link CommandResult} instance for the executed command
 		 */
 		public CommandResult execute(String command) {
 			return execute(NEWLINE, command);
@@ -97,7 +97,7 @@ public class ShellFactory {
 		 * @see #execute(String, String)
 		 * @param message the message to send to the receiveCommand
 		 * @param recieveCommand the command to receive the message
-		 * @return
+		 * @return a {@link CommandResult} instance for the executed command
 		 */
 		public CommandResult executePipedEcho(String message, String recieveCommand) {
 			return executePiped("echo " + "\'" + message + "\'", recieveCommand);
@@ -118,7 +118,7 @@ public class ShellFactory {
 		 * @see #execute(String, String)
 		 * @param sendCommand the command to generate the message
 		 * @param recieveCommand the command to receive the message
-		 * @return
+		 * @return a {@link CommandResult} instance for the executed command
 		 */
 		public CommandResult executePiped(String sendCommand, String recieveCommand) {
 			return execute(NEWLINE, sendCommand + " | " + recieveCommand);
