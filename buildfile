@@ -2,9 +2,11 @@
 # Standard maven2 repository
 repositories.remote << 'http://www.ibiblio.org/maven2'
 
+THIS_VERSION = '0.2'
+
 desc 'shellwrapper'
 define 'shellwrapper' do
   project.group = 'de.entwicklerland'
-  project.version = '0.2'
+  project.version = THIS_VERSION
   package :jar, :id => 'shellwrapper'
 end
