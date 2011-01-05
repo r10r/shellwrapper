@@ -3,7 +3,6 @@ package de.entwicklerland.shellwrapper;
 import static org.junit.Assert.*;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import de.entwicklerland.shellwrapper.ShellFactory.Shell;
@@ -23,16 +22,16 @@ public abstract class AbstractShellTest {
 	
 	@Test
 	public void testSimpleCommand() {
-		runEchoCommand(shell, "FOO");
-		runEchoCommand(shell, "BAR");
+		assertEchoOutput(shell, "FOO");
+		assertEchoOutput(shell, "BAR");
 	}
 
 	
 	@Test(expected = IllegalStateException.class)
 	public void testTermination() {
-		runEchoCommand(shell, "FOO");
+		assertEchoOutput(shell, "FOO");
 		shell.exit();
-		runEchoCommand(shell, "BAR");
+		assertEchoOutput(shell, "BAR");
 		
 	}
 	
@@ -40,7 +39,7 @@ public abstract class AbstractShellTest {
 	public void testErrorOutput() {
 		String command = "nosuchcommand";
 		
-		CommandExecution executedCommand = shell.run("nosuchcommand");
+		CommandResult executedCommand = shell.execute("nosuchcommand");
 		
 		assertEquals("executed command should match", command, executedCommand.getCommand());
 		assertEquals("one error line should be returned", 1, executedCommand.getErrorLines().size());
@@ -51,7 +50,7 @@ public abstract class AbstractShellTest {
 	public void testMultiLineOutput() {
 		String command = "echo FOO; echo BAR";
 		String expectedReturn = "FOO\nBAR\n";
-		CommandExecution executedCommand = shell.run(command);
+		CommandResult executedCommand = shell.execute(command);
 		
 		assertEquals("executed command should match", command, executedCommand.getCommand());
 		assertEquals("returned lines count should match", 2, executedCommand.getOutputLines().size());
@@ -59,9 +58,10 @@ public abstract class AbstractShellTest {
 		assertTrue("stderr should be empty", executedCommand.getErrorLines().isEmpty());
 	}
 	
-	private void runEchoCommand(Shell shell, String value) {
+	private void assertEchoOutput(Shell shell, String value) {
 		String command = "echo " + value;
-		CommandExecution executedCommand = shell.run(command);
+		CommandResult executedCommand = shell.execute(command);
+		
 		assertEquals("executed command should match", command, executedCommand.getCommand());
 		assertEquals("one line should be returned", 1, executedCommand.getOutputLines().size());
 		assertEquals("returned value should match", value, executedCommand.getOutputLines().get(0));
@@ -72,7 +72,7 @@ public abstract class AbstractShellTest {
 	public void testMultipleCommands() {
 		String command = "echo FOO; echo BAR";
 		String expectedReturn = "FOO\nBAR\n";
-		CommandExecution executedCommand = shell.run(command);
+		CommandResult executedCommand = shell.execute(command);
 		
 		assertEquals("executed command should match", command, executedCommand.getCommand());
 		assertEquals("returned lines count should match", 2, executedCommand.getOutputLines().size());
@@ -81,7 +81,7 @@ public abstract class AbstractShellTest {
 		
 		String command1 = "echo BAR; echo FOO";
 		String expectedReturn1 = "BAR\nFOO\n";
-		CommandExecution executedCommand1 = shell.run(command1);
+		CommandResult executedCommand1 = shell.execute(command1);
 		
 		assertEquals("executed command should match", command1, executedCommand1.getCommand());
 		assertEquals("returned lines count should match", 2, executedCommand1.getOutputLines().size());

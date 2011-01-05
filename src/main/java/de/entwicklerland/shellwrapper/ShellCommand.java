@@ -1,7 +1,9 @@
 package de.entwicklerland.shellwrapper;
 
 /**
- * Collection of 
+ * Concrete shell commands that are supported
+ * by  the {@link ShellFactory.Shell} implementation.
+ * 
  * @author rjenster
  *
  */

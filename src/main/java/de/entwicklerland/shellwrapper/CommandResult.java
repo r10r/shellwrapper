@@ -11,7 +11,7 @@ import java.util.List;
  * @author rjenster
  *
  */
-public class CommandExecution {
+public class CommandResult {
 	
 	private String command;
 	private List<String> outputLines;
@@ -19,7 +19,7 @@ public class CommandExecution {
 	private String output;
 	private String error;
 	
-	public CommandExecution(String command, List<String> output, List<String> error) {
+	public CommandResult(String command, List<String> output, List<String> error) {
 		this.command = command;
 		this.outputLines = output;
 		this.errorLines = error;

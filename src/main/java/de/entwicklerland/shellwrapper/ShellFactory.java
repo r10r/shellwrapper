@@ -10,10 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Factory to create shell instances for 
- * executing commands and capturing the command output.
+ * Factory to create shell instances for executing commands.
  * The output of a command is returned encapsulated in 
- * an ExecutedCommand Object.
+ * {@link CommandResult} instances.
  * 
  * @author rjenster
  *
@@ -27,7 +26,7 @@ public class ShellFactory {
 	}
 	
 	public static class Shell {
-		private Process console;
+		private Process shellProcess;
 		private BufferedWriter stdin;
 		private BufferedReader stdout;
 		private BufferedReader stderr;
@@ -35,66 +34,117 @@ public class ShellFactory {
 		
 		
 		// marker indicating the end of the command output
-		private final String EOO = "END-"+System.currentTimeMillis();
+		private final String EOO = "END-" + System.currentTimeMillis();
 		
 		/**
-		 * Creates a new shell.Remember to call {@link #exit()} on the shell instance once the
+		 * Creates a new shell. Remember to call {@link #exit()} on the shell instance once the
 		 * shell is not used anymore.
 		 * 
-		 * @throws IllegalStateException which wraps an IOException when the execution of the shell command fails
+		 * @throws IllegalStateException which wraps an IOException if the execution of the shell command fails
 		 */
 		public Shell(String command) {
 			try {
-				console = Runtime.getRuntime().exec(command);
+				shellProcess = Runtime.getRuntime().exec(command);
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}
 			
-			stdin  = new BufferedWriter(new OutputStreamWriter(console.getOutputStream()));
-			stdout = new BufferedReader(new InputStreamReader(console.getInputStream()));
-			stderr = new BufferedReader(new InputStreamReader(console.getErrorStream()));
+			stdin  = new BufferedWriter(new OutputStreamWriter(shellProcess.getOutputStream()));
+			stdout = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
+			stderr = new BufferedReader(new InputStreamReader(shellProcess.getErrorStream()));
 		}
 	
-		public List<CommandExecution> run(String... cmds) {
-			List<CommandExecution> output = new ArrayList<CommandExecution>(cmds.length);
+		/**
+		 * Execute multiple commands in sequence.
+		 * 
+		 * @see #execute(String, String)
+		 * @param commands the commands to execute
+		 * @return a list of {@link CommandResult} instances for the executed commands
+		 */
+		public List<CommandResult> execute(String... commands) {
+			List<CommandResult> output = new ArrayList<CommandResult>(commands.length);
 			
-			for(int i=0; i <cmds.length; i++) {
-				output.add(run(cmds[i]));
+			for(int i=0; i <commands.length; i++) {
+				output.add(execute(commands[i]));
 			}
 			
 			return output;
 		}
 		
-		public CommandExecution runPipedEcho(String message, String recipient) {
-			return runPiped("echo " + "\'" + message + "\'", recipient);
+		/**
+		 * Execute a single command 
+		 * 
+		 * @see #execute(String, String)
+		 * @param command
+		 * @return
+		 */
+		public CommandResult execute(String command) {
+			return execute(NEWLINE, command);
 		}
-		
-		public CommandExecution runPiped(String sendCmd, String recipient) {
-			return run(NEWLINE, sendCmd + " | " + recipient);
-		}
-		
-		public CommandExecution run(String cmd) {
-			return run(NEWLINE, cmd);
+
+		/**
+		 * Convenience method to send the given message to the given recieveCommand using echo and a pipe.
+		 * E.g. calling
+		 * <pre>
+		 * 	executePipedEcho("Hello World", "wc -c")
+		 * </pre>
+		 * will result in
+		 * <pre>
+		 * 	echo "Hello World" | wc -c
+		 * </pre>
+		 * being executed in the shell
+		 * 
+		 * @see #execute(String, String)
+		 * @param message the message to send to the receiveCommand
+		 * @param recieveCommand the command to receive the message
+		 * @return
+		 */
+		public CommandResult executePipedEcho(String message, String recieveCommand) {
+			return executePiped("echo " + "\'" + message + "\'", recieveCommand);
 		}
 		
 		/**
+		 * Convenience method to send the output of the sendCommand to the given recieveCommand using a pipe.
+		 * E.g. calling
+		 * <pre>
+		 * 	executePiped("whoami", "wc -c")
+		 * </pre>
+		 * will result in
+		 * <pre>
+		 * 	whoami | wc -c
+		 * </pre>
+		 * being executed in the shell
 		 * 
-		 * @param cmd
+		 * @see #execute(String, String)
+		 * @param sendCommand the command to generate the message
+		 * @param recieveCommand the command to receive the message
 		 * @return
+		 */
+		public CommandResult executePiped(String sendCommand, String recieveCommand) {
+			return execute(NEWLINE, sendCommand + " | " + recieveCommand);
+		}
+		
+		
+		/**
+		 * Executes a single command in the shell.
+		 * 
+		 * @param terminator terminates and executes the command in the shell
+		 * @param command the command to execute
+		 * @return a {@link CommandResult} instance for the executed command
 		 * @throws IllegalStateException if console process has exited or if it's not possible 
 		 * to write the command to the console or read the results
 		 */
-		public CommandExecution run(String terminator, String cmd) {
+		private CommandResult execute(String terminator, String command) {
 			if (hasExited()) {
-				throw new IllegalStateException("Console process has exited allready!");
+				throw new IllegalStateException("Console process has already exited!");
 			} else {
 				try {
-					stdin.write(cmd);
+					stdin.write(command);
 					stdin.write(terminator);
 					writeMarker();
 					stdin.flush();
 				
-					return new CommandExecution(cmd, getOutput(stdout), getOutput(stderr));
+					return new CommandResult(command, getOutput(stdout), getOutput(stderr));
 				
 				} catch (IOException e) {
 					throw new IllegalStateException(e);
@@ -102,10 +152,13 @@ public class ShellFactory {
 			}
 		}
 	
+		/**
+		 * Closes all connected streams (STDOUT,STDERR and STDIN) and terminates the shell process.
+		 */
 		public void exit() {
 			/*
 			 *  ensure all streams are closed properly,
-			 *  which is not properly by calling console.destroy()
+			 *  which is not properly done by calling console.destroy()
 			 */
 			
 			for(Closeable stream : new Closeable[]{stdout, stdin, stderr}) {
@@ -116,10 +169,13 @@ public class ShellFactory {
 				}
 				
 			}
-			console.destroy();
+			shellProcess.destroy();
 			hasExited = true;
 		}
 	
+		/**
+		 * @return true if the shell process has exited.
+		 */
 		public boolean hasExited() {
 			return hasExited;
 		}
@@ -166,7 +222,7 @@ public class ShellFactory {
 	}
 
 	/**
-	 * Concatenates the given lines using the given separator.
+	 * Helper method to concatenate the given lines using the given separator.
 	 * 
 	 * @param lines
 	 * @param separator
