@@ -4,7 +4,7 @@ repositories.remote << 'http://www.ibiblio.org/maven2'
 
 require 'time'
 
-THIS_VERSION = '0.2'
+THIS_VERSION = "0.2"
 
 desc 'shellwrapper'
 define 'shellwrapper' do
